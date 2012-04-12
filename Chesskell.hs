@@ -3,8 +3,22 @@
 module Chesskell where
 
 import Data.HashMap
+import DataStructs
 
 --------------------------------------------------------------------
+
+
+--Boad intialization
+initBoard::Board
+initBoard = 
+  fromList ([(1,Rw False), (2,Nw), (3,Bw), (4,Qw), (5,Kw False False), 
+           (6,Bw), (7,Nw), (8,Rw False), (9,Pw), (10,Pw), (11,Pw), 
+           (12,Pw), (13,Pw), (14,Pw), (15,Pw), (16,Pw)] ++
+           [(a,Empty) | a<-[17..48]] ++ 
+          [(49,Pb), (50,Pb), (51,Pb), (52,Pb), (53,Pb), (54,Pb), 
+           (55,Pb), (56,Pb), (57,Rb False), (58,Nb), (59,Bb),
+            (60,Qb), (61,Kb False False), (62,Bb), (63,Nb), (64,Rb False)])
+
 --General IO Parsing to Start Everything 
 main :: IO ()
 main = printRules >> getLine >>= parseInput
