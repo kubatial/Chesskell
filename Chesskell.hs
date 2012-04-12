@@ -8,7 +8,7 @@ import DataStructs
 --------------------------------------------------------------------
 
 
---Boad intialization
+-- Board intialization
 initBoard::Board
 initBoard = 
   fromList ([(1,Rw False), (2,Nw), (3,Bw), (4,Qw), (5,Kw False False), 
