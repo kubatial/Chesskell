@@ -1,5 +1,5 @@
 module GetAction where
-import DataStructs
+import DataStructs as DS
 
-getAction :: Board -> State -> Action
-getAction board state = Exit
+getAction :: DS.Board -> DS.State -> IO DS.Action
+getAction board state = return DS.Exit

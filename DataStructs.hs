@@ -1,7 +1,5 @@
-{-# OPTIONS_GHC -Wall #-}
-
 module DataStructs where
-import Data.HashMap
+import Data.HashMap as HM
 
 -- structure to hold piece types or 'Empty' if no piece 
 data Piece = 
@@ -24,4 +22,4 @@ data State =
     deriving (Show)
 
 -- bord type
-type Board = Map Integer Piece
+type Board = HM.Map Integer Piece

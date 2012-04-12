@@ -2,22 +2,26 @@
 
 module Chesskell where
 
-import Data.HashMap
-import DataStructs
+import Data.HashMap as HM
+import DataStructs as DS
+import GetAction as GA
+import ProcessMove as PM
 
 --------------------------------------------------------------------
 
 
 -- Board intialization
-initBoard::Board
+initBoard::DS.Board
 initBoard = 
-  fromList ([(1,Rb False), (2,Nb), (3,Bb), (4,Qb), (5,Kb False False), 
-           (6,Bb), (7,Nb), (8,Rb False), (9,Pb), (10,Pb), (11,Pb), 
-           (12,Pb), (13,Pb), (14,Pb), (15,Pb), (16,Pb)] ++
-           [(a,Empty) | a<-[17..48]] ++ 
-          [(49,Pw), (50,Pw), (51,Pw), (52,Pw), (53,Pw), (54,Pw), 
-           (55,Pw), (56,Pw), (57,Rw False), (58,Nw), (59,Bw),
-            (60,Qw), (61,Kw False False), (62,Bw), (63,Nw), (64,Rw False)])
+  fromList ([(1,DS.Rb False), (2,DS.Nb), (3,DS.Bb), (4,DS.Qb), 
+            (5,DS.Kb False False), (6,DS.Bb), (7,DS.Nb),
+             (8,DS.Rb False), (9,DS.Pb), (10,DS.Pb), (11,DS.Pb), 
+           (12,DS.Pb), (13,DS.Pb), (14,DS.Pb), (15,DS.Pb), (16,DS.Pb)]
+           ++ [(a,Empty) | a<-[17..48]] ++ 
+          [(49,DS.Pw), (50,DS.Pw), (51,DS.Pw), (52,DS.Pw), (53,DS.Pw), 
+           (54,DS.Pw), (55,DS.Pw), (56,DS.Pw), (57,DS.Rw False),
+             (58,DS.Nw), (59,DS.Bw), (60,DS.Qw), (61,DS.Kw False False),
+              (62,DS.Bw), (63,DS.Nw), (64,DS.Rw False)])
 
 --General IO Parsing to Start Everything 
 main :: IO ()
@@ -25,7 +29,7 @@ main = printRules >> getLine >>= parseInput
 
 
 printRules :: IO ()
-printRules = putStrLn (unlines ["\nWelcome to Chesskell!!!" , 
+printRules = putStr (unlines ["\nWelcome to Chesskell!!!" , 
 	"Rules: " , 
 	"You can choose between the following options" ,
 	"1) Human vs. Human - Where 2 human players enter moves" ,
@@ -38,7 +42,7 @@ printRules = putStrLn (unlines ["\nWelcome to Chesskell!!!" ,
 	"-Exit - Will exit the current game" ,
 	"-Resign - you resign the current game" , 
 	"-Help - Print this list of instructions again" ,
-	"Enter your choice of game or type exit: "])
+	"\nEnter your choice of game or type exit: "])
 
 printHelp :: IO ()
 printHelp = putStrLn (unlines [
@@ -53,7 +57,7 @@ printHelp = putStrLn (unlines [
 parseInput :: String -> IO ()
 parseInput s
   | s == "Exit" = putStrLn "Bye!"
-  | s == "1" = humanVsHuman initBoard
+  | s == "1" = humanVsHuman (initBoard, DS.Nothing)
   | s == "2" = humanVsMachine1
   | s == "3" = humanVsMachine2
   | s == "4" = machineVsMachine
@@ -64,9 +68,9 @@ parseInput s
 
 ----------------------------------------------------------------------
 --Human vs Human Functionality
-humanVsHuman :: Board -> IO ()
-humanVsHuman b = (printBoard 1 b) >> (putStr "Enter Move: ")
---		>>= parseMove
+humanVsHuman :: (DS.Board, DS.State) -> IO ()
+humanVsHuman (b,s) = (printBoard 1 b) >> (GA.getAction b s) 
+                      >>= (processAction b s)
 
 printBoard :: Integer -> Board -> IO ()
 printBoard x b
@@ -99,8 +103,19 @@ pieceToString p
   | otherwise = " "
 
 
---parseMove :: String -> IO ()
+processAction :: DS.Board -> DS.State -> DS.Action -> IO ()
 
+processAction board _ DS.Exit = 
+    putStrLn "\n\nExiting... \nThank you for playing Chesskell!\n"
+
+processAction board _ DS.Resign = 
+    putStrLn "\n\nYou have resigned. \nThank you for playing Cesskell!\n" 
+
+processAction board state DS.Help = 
+    printRules >> (humanVsHuman (board,state) )
+
+processAction board state move@(DS.M _ _) = 
+    humanVsHuman (PM.processMove board move)  
 
 ---------------------------------------------------------------------
 --Human vs. Machine1 Functionality
@@ -116,4 +131,5 @@ humanVsMachine2 = putStrLn "HumanvMachine2"
 --Machine vs. Machine Functionality
 machineVsMachine :: IO ()
 machineVsMachine = putStrLn "MachinevMachine!"
+
 
