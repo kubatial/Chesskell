@@ -11,13 +11,13 @@ import DataStructs
 -- Board intialization
 initBoard::Board
 initBoard = 
-  fromList ([(1,Rw False), (2,Nw), (3,Bw), (4,Qw), (5,Kw False False), 
-           (6,Bw), (7,Nw), (8,Rw False), (9,Pw), (10,Pw), (11,Pw), 
-           (12,Pw), (13,Pw), (14,Pw), (15,Pw), (16,Pw)] ++
+  fromList ([(1,Rb False), (2,Nb), (3,Bb), (4,Qb), (5,Kb False False), 
+           (6,Bb), (7,Nb), (8,Rb False), (9,Pb), (10,Pb), (11,Pb), 
+           (12,Pb), (13,Pb), (14,Pb), (15,Pb), (16,Pb)] ++
            [(a,Empty) | a<-[17..48]] ++ 
-          [(49,Pb), (50,Pb), (51,Pb), (52,Pb), (53,Pb), (54,Pb), 
-           (55,Pb), (56,Pb), (57,Rb False), (58,Nb), (59,Bb),
-            (60,Qb), (61,Kb False False), (62,Bb), (63,Nb), (64,Rb False)])
+          [(49,Pw), (50,Pw), (51,Pw), (52,Pw), (53,Pw), (54,Pw), 
+           (55,Pw), (56,Pw), (57,Rw False), (58,Nw), (59,Bw),
+            (60,Qw), (61,Kw False False), (62,Bw), (63,Nw), (64,Rw False)])
 
 --General IO Parsing to Start Everything 
 main :: IO ()
