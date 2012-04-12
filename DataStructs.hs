@@ -6,7 +6,7 @@ import Data.HashMap
 -- structure to hold piece types or 'Empty' if no piece 
 data Piece = 
     Pw | Pb | Rw Bool | Rb Bool | Nw | Nb | Bw | Bb | Qw | Qb | Kw Bool Bool | Kb Bool Bool | Empty
-    deriving (Show)
+    deriving (Show, Eq)
 
 -- structure to hold various Actions types
 data  Action =
