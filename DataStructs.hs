@@ -20,6 +20,9 @@ data  Action =
 data State =
       WhiteCheck
     | BlackCheck
+    | WhiteCheckmate
+    | BlackCheckmate
+    | Stalemate
     | Nothing
     deriving (Show)
 
