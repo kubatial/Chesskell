@@ -139,7 +139,7 @@ processAction _ _ DS.Exit =
     putStrLn "\nEXITING... \nThank you for playing Chesskell!\n"
 
 processAction _ _ DS.Resign = 
-    putStrLn "\nYou have resigned. \nThank you for playing Cesskell!\n" 
+    putStrLn "\nYou have resigned. \nThank you for playing Chesskell!\n" 
 
 processAction board state DS.Help = 
     printRules >> (humanVsHuman (board,state) )
