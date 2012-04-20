@@ -1,4 +1,4 @@
---The main file that runs the game
+-The main file that runs the game
 
 module Chesskell where
 
@@ -21,8 +21,7 @@ initBoard =
            [(49,DS.Pw 1), (50,DS.Pw 2), (51,DS.Pw 3), (52,DS.Pw 4), 
             (53,DS.Pw 5), (54,DS.Pw 6), (55,DS.Pw 7), (56,DS.Pw 8), 
             (57,DS.Rw 1 False), (58,DS.Nw 1), (59,DS.Bw 1), (60,DS.Qw),
-            (61,DS.Kw False False), (62,DS.Bw 2), (63,DS.Nw 2), 
-            (64,DS.Rw 2 False)])
+            (61,DS.Kw False False), (62,DS.Bw 2), (63,DS.Nw 2), (64,DS.Rw 2 False)])
 
 --General IO Parsing to Start Everything 
 main :: IO ()
