@@ -1,4 +1,4 @@
--The main file that runs the game
+--The main file that runs the game
 
 module Chesskell where
 
@@ -13,15 +13,27 @@ import ProcessMove as PM
 -- Board intialization
 initBoard::DS.Board
 initBoard = 
-  fromList ([(1,DS.Rb 1 False), (2,DS.Nb 1), (3,DS.Bb 1), (4,DS.Qb), 
+  fromList ([(1,DS.Rb 1 False), (2,DS.Nb 1), (3,DS.Bb 1), (4,DS.Qb 1), 
             (5,DS.Kb False False), (6,DS.Bb 2), (7,DS.Nb 2),
             (8,DS.Rb 2 False), (9,DS.Pb 1), (10,DS.Pb 2), (11,DS.Pb 3), 
             (12,DS.Pb 4), (13,DS.Pb 5), (14,DS.Pb 6), (15,DS.Pb 7), 
             (16,DS.Pb 8)] ++ [(a,Empty) | a<-[17..48]] ++ 
            [(49,DS.Pw 1), (50,DS.Pw 2), (51,DS.Pw 3), (52,DS.Pw 4), 
             (53,DS.Pw 5), (54,DS.Pw 6), (55,DS.Pw 7), (56,DS.Pw 8), 
-            (57,DS.Rw 1 False), (58,DS.Nw 1), (59,DS.Bw 1), (60,DS.Qw),
+            (57,DS.Rw 1 False), (58,DS.Nw 1), (59,DS.Bw 1), (60,DS.Qw 1),
             (61,DS.Kw False False), (62,DS.Bw 2), (63,DS.Nw 2), (64,DS.Rw 2 False)])
+
+--Reverse HashMap of board initialization
+initBoard2 :: DS.Board2
+initBoard2 = fromList ([(DS.Rb 1 False, 1), (DS.Nb 1, 2), (DS.Bb 1, 3), (DS.Qb 1, 4),
+		(DS.Kb False False, 5), (DS.Bb 2, 6), (DS.Nb 2, 7),
+		(DS.Rb 2 False, 8), (DS.Pb 1, 9), (DS.Pb 2, 10), (DS.Pb 3, 11),
+		(DS.Pb 4, 12), (DS.Pb 5, 13), (DS.Pb 6, 14), (DS.Pb 7, 15),
+		(DS.Pb 8, 16)] ++ [(Empty, a) | a<-[17..48]] ++ 
+		[(DS.Pw 1, 49), (DS.Pw 2, 50), (DS.Pw 3, 51), (DS.Pw 4, 52),
+		(DS.Pw 5, 53), (DS.Pw 6, 54), (DS.Pw 7, 55), (DS.Pw 8, 56),
+		(DS.Rw 1 False, 57), (DS.Nw 1, 58), (DS.Bw 1, 59), (DS.Qw 1, 60),
+		(DS.Kw False False, 61), (DS.Bw 2, 62), (DS.Nw 2, 63), (DS.Rw 2 False, 64)])
 
 --General IO Parsing to Start Everything 
 main :: IO ()
@@ -38,6 +50,12 @@ printRules = putStr (unlines ["\n\nWELCOME TO CHESSKELL!" ,
 	"4) Machine1 vs. Machine2 - Pit machines against each other\n" ,
 	"When you enter a move you should type in the square you are" ,
 	"moving a piece from to the square you are moving to, E.g e2-e4",
+	"There are 3 kinds of special moves: Castling, Promotion and En Passant.",
+	"You enter those moves as follows:\n",
+	"   *O-O - Kingside Castling",
+	"   *O-O-O - Queenside Castling",
+	"   *Add -(PieceName) after you move a pawn to promotion, E.g e7-e8-Q",
+	"   *Add -(ep) after you take a pawn en passant, E.g e5-d6-ep\n",
 	"Finally, you have the following options: " ,
 	"   *Exit - Will exit the current game" ,
 	"   *Resign - you resign the current game" , 
@@ -48,6 +66,12 @@ printHelp :: IO ()
 printHelp = putStrLn (unlines [
 	"When you enter a move you should type in the square you are" ,
 	"moving a piece from to the square you are moving to, E.g e2-e4",
+	"There are 3 kinds of special moves: Castling, Promotion and En Passant.",
+	"You enter those moves as follows:\n",
+	"   *O-O - Kingside Castling",
+	"   *O-O-O - Queenside Castling",
+	"   *Add -(PieceName) after you move a pawn to promotion, E.g e7-e8-Q",
+	"   *Add -(ep) after you take a pawn en passant, E.g e5-d6-ep\n",
 	"Finally, you have the following options: " ,
 	"   *Exit - Will exit the current game" ,
 	"   *Resign - you resign the current game" , 
@@ -56,21 +80,21 @@ printHelp = putStrLn (unlines [
 
 parseInput :: String -> IO ()
 parseInput s
-  | s == "Exit" = processAction initBoard DS.Nothing DS.Exit
-  | s == "1" = humanVsHuman (initBoard, DS.Nothing)
+  | (s == "Exit") || (s == "exit")  = processAction initBoard initBoard2 DS.NothingWhite DS.Exit
+  | s == "1" = humanVsHuman (initBoard, initBoard2, DS.NothingWhite)
   | s == "2" = humanVsMachine1
   | s == "3" = humanVsMachine2
   | s == "4" = machineVsMachine
-  | s == "Help" = printRules >> getLine >>= parseInput
-  | s == "Resign" = processAction initBoard DS.Nothing DS.Resign
+  | (s == "Help") || (s == "help")  = printRules >> getLine >>= parseInput
+  | (s == "Resign") || (s == "resign") = processAction initBoard initBoard2 DS.NothingWhite DS.Resign
   | otherwise = (putStrLn "Please enter a valid input: ") >> getLine 
   			>>= parseInput
 
 ----------------------------------------------------------------------
 --Human vs Human Functionality
-humanVsHuman :: (DS.Board, DS.State) -> IO ()
-humanVsHuman (b,s) = (printBoard 1 b) >> (GA.getAction b s) 
-                      >>= (processAction b s)
+humanVsHuman :: (DS.Board, DS.Board2, DS.State) -> IO ()
+humanVsHuman (b, b2, s) = (printBoard 1 b) >> (GA.getAction b b2 s) 
+                      >>= (processAction b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
 printBoard x b
@@ -125,26 +149,35 @@ pieceToString (Nw _) = " N "
 pieceToString (Nb _) = " n "
 pieceToString (Bw _) = " B "
 pieceToString (Bb _) = " b "
-pieceToString Qw = " Q "
-pieceToString Qb = " q "
+pieceToString (Qw _) = " Q "
+pieceToString (Qb _) = " q "
 pieceToString (Kw _ _) = " K "
 pieceToString (Kb _ _) = " k "
 pieceToString _ = "   "
 
 
-processAction :: DS.Board -> DS.State -> DS.Action -> IO ()
+processAction :: DS.Board -> DS.Board2 -> DS.State -> DS.Action -> IO ()
 
-processAction _ _ DS.Exit = 
+processAction _ _ _ DS.Exit = 
     putStrLn "\nEXITING... \nThank you for playing Chesskell!\n"
 
-processAction _ _ DS.Resign = 
+processAction _ _ _ DS.Resign = 
     putStrLn "\nYou have resigned. \nThank you for playing Chesskell!\n" 
 
-processAction board state DS.Help = 
-    printRules >> (humanVsHuman (board,state) )
+processAction _ _ DS.WhiteCheckmate _ = 
+    putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+   
+processAction _ _ DS.BlackCheckmate _ = 
+    putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
 
-processAction board state move@(DS.M _ _) = 
-    humanVsHuman (PM.processMove board move)  
+processAction _ _ DS.Stalemate _ = 
+    putStrLn "\nThe game ended in a Stalemate. \n Thank you for playing Chesskell!\n"
+
+processAction board board2 state DS.Help = 
+    printRules >> (humanVsHuman (board, board2, state) )
+
+processAction board board2 state move = 
+    humanVsHuman (PM.processMove board board2 state move)  
 
 -----------------------------------------------------------------------------
 --Human vs. Machine1 Functionality
