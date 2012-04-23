@@ -6,7 +6,8 @@ import Data.HashMap as HM
 import DataStructs as DS
 import GetAction as GA
 import ProcessMove as PM
-
+import Data.Tree
+import Prelude as P
 -----------------------------------------------------------------------------
 
 
@@ -80,21 +81,25 @@ printHelp = putStrLn (unlines [
 
 parseInput :: String -> IO ()
 parseInput s
-  | (s == "Exit") || (s == "exit")  = processAction initBoard initBoard2 DS.NothingWhite DS.Exit
+  | (s == "Exit") || (s == "exit")  = processAction 1 initBoard initBoard2 DS.NothingWhite DS.Exit
   | s == "1" = humanVsHuman (initBoard, initBoard2, DS.NothingWhite)
-  | s == "2" = humanVsMachine1
-  | s == "3" = humanVsMachine2
-  | s == "4" = machineVsMachine
+  | s == "2" = humanVsMachine1 (initBoard, initBoard2, DS.NothingWhite)
+  | s == "3" = humanVsMachine2 (initBoard, initBoard2, DS.NothingWhite)
+  | s == "4" = machineVsMachine (initBoard, initBoard2, DS.NothingWhite)
   | (s == "Help") || (s == "help")  = printRules >> getLine >>= parseInput
-  | (s == "Resign") || (s == "resign") = processAction initBoard initBoard2 DS.NothingWhite DS.Resign
+  | (s == "Resign") || (s == "resign") = processAction 1 initBoard initBoard2 DS.NothingWhite DS.Resign
   | otherwise = (putStrLn "Please enter a valid input: ") >> getLine 
   			>>= parseInput
 
 ----------------------------------------------------------------------
 --Human vs Human Functionality
 humanVsHuman :: (DS.Board, DS.Board2, DS.State) -> IO ()
-humanVsHuman (b, b2, s) = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
-                      >>= (processAction b b2 s)
+humanVsHuman (b, b2, s) 
+  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+                      >>= (processAction 1 b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
 printBoard x b
@@ -156,42 +161,152 @@ pieceToString (Kb _ _) = " k "
 pieceToString _ = "   "
 
 
-processAction :: DS.Board -> DS.Board2 -> DS.State -> DS.Action -> IO ()
+processAction :: Integer -> DS.Board -> DS.Board2 -> DS.State -> DS.Action -> IO ()
 
-processAction _ _ _ DS.Exit = 
+processAction _ _ _ _ DS.Exit = 
     putStrLn "\nEXITING... \nThank you for playing Chesskell!\n"
 
-processAction _ _ _ DS.Resign = 
+processAction _ _ _ _ DS.Resign = 
     putStrLn "\nYou have resigned. \nThank you for playing Chesskell!\n" 
 
-processAction _ _ DS.WhiteCheckmate _ = 
+processAction _ _ _ DS.WhiteCheckmate _ = 
     putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
    
-processAction _ _ DS.BlackCheckmate _ = 
+processAction _ _ _ DS.BlackCheckmate _ = 
     putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
 
-processAction _ _ DS.Stalemate _ = 
+processAction _ _ _ DS.Stalemate _ = 
     putStrLn "\nThe game ended in a Stalemate. \n Thank you for playing Chesskell!\n"
 
-processAction board board2 state DS.Help = 
-    printRules >> (humanVsHuman (board, board2, state) )
+processAction i board board2 state DS.Help
+  | i == 1 = printRules >> (humanVsHuman (board, board2, state) )
+  | i == 2 = printRules >> (humanVsMachine1 (board, board2, state))
+  | i == 3 = printRules >> (humanVsMachine2 (board, board2, state))
+  | otherwise = printRules >> (machineVsMachine (board, board2, state))
 
-processAction board board2 state move = 
-    humanVsHuman (PM.processMove board board2 state move)  
+processAction i board board2 state move 
+  | i == 1 = humanVsHuman (PM.processMove board board2 state move)  
+  | i == 2 = humanVsMachine1 (minimax (generateGameTree 2 (PM.processMove board board2 state move)))
+  | otherwise = humanVsHuman (PM.processMove board board2 state move)
+--  | i == 3 = humanVsMachine2 (alphabeta (generateGameTree 4 (PM.processMove board, board2, state, move)))
+--  | otherwise = machineVsMachine (minimax (generateGameTree 4 (PM.processMove board, board2, state, move)))
+
 
 -----------------------------------------------------------------------------
 --Human vs. Machine1 Functionality
-humanVsMachine1 :: IO ()
-humanVsMachine1 = putStrLn "HumanvMachine1"
+humanVsMachine1 :: (DS.Board, DS.Board2, DS.State) -> IO ()
+humanVsMachine1 (b, b2, s) 
+  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+                      >>= (processAction 2 b b2 s)-- >>= generateGameTree >>= minimax
+
+
+--First Integer just starts the eval. Second Integer is the current value.
+evaluatePosition :: Integer -> Integer -> DS.Board -> Integer
+evaluatePosition i j board
+  | i > 64 = j
+  | otherwise = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup j board)))) board
+
+pieceValue :: Piece -> Integer
+pieceValue piece
+  | whitePawn = 1
+  | blackPawn = -1
+  | whiteKnight = 3
+  | blackKnight = -3
+  | whiteBishop = 3
+  | blackBishop = -3
+  | whiteRook = 5
+  | blackRook = -5
+  | whiteQueen = 9
+  | blackQueen = -9
+  | whiteKing = 100
+  | blackKing = -100
+  | otherwise = 0
+    where
+      whitePawn = (piece == (Pw 1)) || (piece == (Pw 2)) || (piece == (Pw 3)) || (piece == (Pw 4)) || (piece == (Pw 5)) || (piece == (Pw 6)) || (piece == (Pw 7)) || (piece == (Pw 8))
+      blackPawn = (piece == (Pb 1)) || (piece == (Pb 2)) || (piece == (Pb 3)) || (piece == (Pb 4)) || (piece == (Pb 5)) || (piece == (Pb 6)) || (piece == (Pb 7)) || (piece == (Pb 8))
+      whiteKnight = (piece == (Nw 1)) || (piece == (Nw 2)) || (piece == (Nw 3))
+      blackKnight = (piece == (Nb 1)) || (piece == (Nb 2)) || (piece == (Nb 3))
+      whiteBishop = (piece == (Bw 1)) || (piece == (Bw 2)) || (piece == (Bw 3))
+      blackBishop = (piece == (Bb 1)) || (piece == (Bb 2)) || (piece == (Bb 3))
+      whiteRook = (piece == (Rw 1 True)) || (piece == (Rw 2 True)) || (piece == (Rw 3 True)) || (piece == (Rw 1 False)) || (piece == (Rw 2 False)) || (piece == (Rw 3 False))
+      blackRook = (piece == (Rb 1 True)) || (piece == (Rb 2 True)) || (piece == (Rb 3 True)) || (piece == (Rb 1 False)) || (piece == (Rb 2 False)) || (piece == (Rb 3 False))
+      whiteQueen = (piece == (Qw 1)) || (piece == (Qw 2)) || (piece == (Qw 3))
+      blackQueen = (piece == (Qb 1)) || (piece == (Qb 2)) || (piece == (Qb 3))
+      whiteKing = (piece == (Kw True True)) || (piece == (Kw True False)) || (piece == (Kw False True)) || (piece == (Kw False False)) 
+      blackKing = (piece == (Kb True True)) || (piece == (Kb True False)) || (piece == (Kb False True)) || (piece == (Kb False False)) 
+
+generateGameTree :: Integer -> (DS.Board, DS.Board2, DS.State) -> Tree (DS.Board, DS.Board2, DS.State, Integer)
+generateGameTree i (b, b2, s) 
+  | i == 0 = Node (b, b2, s, evaluatePosition 1 0 b) []
+  | (even i) = Node (b, b2, s, getMin 1000 children) children
+  | (odd i) = Node (b, b2, s, getMax (-1000) children) children
+    where
+      children = P.map (generateGameTree (i-1)) (P.map (PM.processMove b b2 s) (GA.getLegalBlackMoves b b2 s))
+
+getMin :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
+getMin i (x:xs) 
+  | i < y = getMin i xs
+  | otherwise = getMin y xs
+    where
+      y = (extractValue (rootLabel x))
+getMin i [] = i
+
+getMax :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
+getMax i (x:xs) 
+  | i < y = getMin y xs
+  | otherwise = getMin i xs
+    where
+      y = (extractValue (rootLabel x))
+getMax i [] = i
+
+extractValue :: (DS.Board, DS.Board2, DS.State, Integer) -> Integer
+extractValue (b, b2, s, i) = i
+
+extractBoard1 :: (DS.Board, DS.Board2, DS.State, Integer) -> DS.Board
+extractBoard1 (b, b2, s, i) = b
+
+extractBoard2 :: (DS.Board, DS.Board2, DS.State, Integer) -> DS.Board2
+extractBoard2 (b, b2, s, i) = b2
+
+extractState :: (DS.Board, DS.Board2, DS.State, Integer) -> DS.State
+extractState (b, b2, s, i) = s
+
+minimax :: Tree (DS.Board, DS.Board2, DS.State, Integer) -> (DS.Board, DS.Board2, DS.State)
+minimax t = PM.processMove (extractBoard1 a) (extractBoard2 a) (extractState a) ((GA.getLegalBlackMoves (extractBoard1 a) (extractBoard2 a) (extractState a)) !! (fromIntegral i))
+  where
+    a = rootLabel t
+    b = subForest t
+    i = getMatchingChild 0 (extractValue a) b
+
+getMatchingChild :: Integer -> Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
+getMatchingChild i j (x:xs)
+  | j == (extractValue (rootLabel x)) = i
+  | otherwise = getMatchingChild (i+1) j xs
+getMatchingChild i j [] = 0
 
 -----------------------------------------------------------------------------
 --Human vs. Machine2 Functionality
-humanVsMachine2 :: IO ()
-humanVsMachine2 = putStrLn "HumanvMachine2"
+humanVsMachine2 :: (DS.Board, DS.Board2, DS.State) -> IO ()
+humanVsMachine2 (b, b2, s) 
+  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+                      >>= (processAction 1 b b2 s)
+
 
 -----------------------------------------------------------------------------
 --Machine vs. Machine Functionality
-machineVsMachine :: IO ()
-machineVsMachine = putStrLn "MachinevMachine!"
+machineVsMachine :: (DS.Board, DS.Board2, DS.State) -> IO ()
+machineVsMachine (b, b2, s) 
+  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+                      >>= (processAction 1 b b2 s)
+
 
 
