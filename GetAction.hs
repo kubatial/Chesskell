@@ -17,7 +17,7 @@ parseUserMove board board2 state move
   | (move == "O-O-O") && (isQueenSideAllowed board board2 state) = return DS.QueenSideCastle
   | ((length move ) == 8) && (isAllowedEnPassant board board2 state ep) = return ep  
   | ((length move ) == 7) && (isAllowedPromotion board board2 state p) = return p
-  | ((length move ) == 5) && (isAllowedMove board board2 state m) = return m
+  | ((length move ) == 5) && (isAllowedMove board board2 state m) = (print (getLegalWhiteMoves board board2 state)) >> return m
   | otherwise = putStrLn "Please Enter a Legal Move: " >> getLine >>= (parseUserMove board board2 state)
 --  | (length move) /= 5 = putStrLn "Please Enter Your Input as From-To " >> getLine >>= parseUserMove
 --  | otherwise = return (M (convertToInt (take 2 move)) (convertToInt (drop 3 move)))
@@ -246,7 +246,7 @@ generateRookMoves board board2 state
       state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
 
 singleRookMoves :: DS.Board -> DS.Board2 -> DS.State -> Integer -> [DS.Action]
-singleRookMoves board board2 s i = (getLeftRookMoves i board s) ++ (getRightRookMoves i board s) ++ (getTopRookMoves i board s) ++ (getBottomRookMoves i board s)
+singleRookMoves board board2 s i = keepFirstSame i ((getLeftRookMoves i board s) ++ (getRightRookMoves i board s) ++ (getTopRookMoves i board s) ++ (getBottomRookMoves i board s))
 
 getLeftRookMoves :: Integer -> DS.Board -> DS.State -> [DS.Action]
 getLeftRookMoves i board state
@@ -310,7 +310,10 @@ generateKnightMoves board board2 state
       state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
 
 singleKnightMoves :: DS.Board -> DS.Board2 -> DS.State -> Integer -> [DS.Action]
-singleKnightMoves board board2 state i = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i-10, i+10, i+6, i+17, i+15])
+singleKnightMoves board board2 state i 
+  | ((i `mod` 8) >= 3) && ((i `mod` 8) <= 6) = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i-10, i+10, i+6, i+17, i+15])
+  | (i `mod` 8) < 3 = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i+10, i+6, i+17, i+15])
+  | otherwise = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i-10, i+6, i+17, i+15])
 
 deleteSameColor :: DS.Board -> DS.State -> [Integer] -> [Integer]
 deleteSameColor board state (x:xs)
@@ -345,7 +348,16 @@ generateBishopMoves board board2 state
       state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
 
 singleBishopMoves :: DS.Board -> DS.Board2 -> DS.State -> Integer -> [DS.Action]
-singleBishopMoves board board2 state i = (getULeft i board state) ++ (getURight i board state) ++ (getLLeft i board state) ++ (getLRight i board state)
+singleBishopMoves board board2 state i = keepFirstSame i ((getULeft i board state) ++ (getURight i board state) ++ (getLLeft i board state) ++ (getLRight i board state))
+
+keepFirstSame :: Integer -> [DS.Action] -> [DS.Action]
+keepFirstSame y (x:xs) =  (DS.M y (extractSecondCoor x)) : (keepFirstSame y xs)
+keepFirstSame x [] = []
+
+extractSecondCoor :: DS.Action -> Integer
+extractSecondCoor (M i j) = j
+extractSecondCoor (P i j k) = j
+extractSecondCoor (E i j) = j
 
 getULeft :: Integer -> DS.Board -> DS.State -> [DS.Action]
 getULeft i board state
@@ -382,7 +394,7 @@ getLRight i board state
   | ((i `mod` 8) == 0) || ((i >= 57) && (i <= 64)) = []
   | state1 && (isWhite board (i+9)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i+9)) = []
-  | otherwise = (M i (i+9)) : (getBottomRookMoves (i+9) board state)
+  | otherwise = (M i (i+9)) : (getLRight (i+9) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
       state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
@@ -461,14 +473,14 @@ singlePawnMoves board board2 state i = (getForwardMove i board state) ++ (getDia
 
 getForwardMove :: Integer -> DS.Board -> DS.State -> [DS.Action]
 getForwardMove i board state
-  | state1 && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) && (isEmpty board (i-16)) = [M i (i-8), M i (i-16)]
-  | state1 && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) = [M i (i-8)]
-  | state2 && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) && (isEmpty board (i+16)) = [M i (i+8), M i (i+16)]
-  | state2 && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) = [M i (i-8)]
-  | state1 && (isEmpty board (i-8)) && ((i >= 9) && (i <= 16)) = [P i (i-8) (Qw 2), P i (i-8) (Rw 3 True), P i (i-8) (Nw 3), P i (i-8) (Bw 3)]
-  | state1 && (isEmpty board (i-8)) = [M i (i-8)]
-  | state2 && (isEmpty board (i+8)) && ((i >= 49) && (i <= 56)) = [P i (i+8) (Qb 2), P i (i+8) (Rb 3 True), P i (i+8) (Nb 3), P i (i+8) (Bb 3)]
-  | state2 && (isEmpty board (i-8)) = [M i (i+8)]
+  | state1 && (isWhite board i) && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) && (isEmpty board (i-16)) = [M i (i-8), M i (i-16)]
+  | state1 && (isWhite board i) && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) = [M i (i-8)]
+  | state2 && (isBlack board i) && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) && (isEmpty board (i+16)) = [M i (i+8), M i (i+16)]
+  | state2 && (isBlack board i) && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) = [M i (i-8)]
+  | state1 && (isWhite board i) && (isEmpty board (i-8)) && ((i >= 9) && (i <= 16)) = [P i (i-8) (Qw 2), P i (i-8) (Rw 3 True), P i (i-8) (Nw 3), P i (i-8) (Bw 3)]
+  | state1 && (isWhite board i) && (isEmpty board (i-8)) = [M i (i-8)]
+  | state2 && (isBlack board i) && (isEmpty board (i+8)) && ((i >= 49) && (i <= 56)) = [P i (i+8) (Qb 2), P i (i+8) (Rb 3 True), P i (i+8) (Nb 3), P i (i+8) (Bb 3)]
+  | state2 && (isBlack board i) && (isEmpty board (i+8)) = [M i (i+8)]
   | otherwise = []
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -639,12 +651,12 @@ getWhiteKing b2
   | isJust (HM.lookup (Kw False True) b2) = fromJust (HM.lookup (Kw False True) b2)
   | isJust (HM.lookup (Kw False False) b2) = fromJust (HM.lookup (Kw False False) b2)
   
-  
+ 
 --Returns the location of the black king
 getBlackKing :: DS.Board2 -> Integer
 getBlackKing b2
-  | isJust (HM.lookup (Kb True True) b2) = fromJust (HM.lookup (Kw True True) b2)
-  | isJust (HM.lookup (Kb True False) b2) = fromJust (HM.lookup (Kw True False) b2)
-  | isJust (HM.lookup (Kb False True) b2) = fromJust (HM.lookup (Kw False True) b2)
-  | isJust (HM.lookup (Kb False False) b2) = fromJust (HM.lookup (Kw False False) b2)
+  | isJust (HM.lookup (Kb True True) b2) = fromJust (HM.lookup (Kb True True) b2)
+  | isJust (HM.lookup (Kb True False) b2) = fromJust (HM.lookup (Kb True False) b2)
+  | isJust (HM.lookup (Kb False True) b2) = fromJust (HM.lookup (Kb False True) b2)
+  | isJust (HM.lookup (Kb False False) b2) = fromJust (HM.lookup (Kb False False) b2)
 

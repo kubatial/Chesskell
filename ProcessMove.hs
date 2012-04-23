@@ -87,21 +87,26 @@ checkState board board2 s@(DS.BlackCheck)
   | elem (GA.getWhiteKing board2) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheck
   | otherwise = DS.NothingWhite
 checkState board board2 s@(DS.NothingWhite)
-  | isCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingBlack)) (GA.getLegalWhiteToMoves board board2 s) = DS.BlackCheckmate
+  | isBlackCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingBlack)) (GA.getLegalWhiteToMoves board board2 s) board2 = DS.BlackCheckmate
   | elem (GA.getBlackKing board2) (GA.getLegalWhiteToMoves board board2 s) = DS.BlackCheck
   | otherwise = DS.NothingBlack
 checkState board board2 s@(DS.NothingBlack)
-  | isCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingWhite)) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheckmate
+  | isWhiteCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingWhite)) (GA.getLegalBlackToMoves board board2 s) board2 = DS.WhiteCheckmate
   | elem (GA.getWhiteKing board2) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheck
   | otherwise = DS.NothingWhite
 
 
-isCheckmate :: [Integer] -> [Integer] -> Bool
-isCheckmate (x:xs) y
-  | elem x y = isCheckmate xs y
+isWhiteCheckmate :: [Integer] -> [Integer] -> DS.Board2 -> Bool
+isWhiteCheckmate (x:xs) y b
+  | elem x y = isWhiteCheckmate xs y b
   | otherwise = False
-isCheckmate [] y = True
+isWhiteCheckmate [] y b = elem (GA.getWhiteKing b) y
 
+isBlackCheckmate :: [Integer] -> [Integer] -> DS.Board2 -> Bool
+isBlackCheckmate (x:xs) y b
+  | elem x y = isBlackCheckmate xs y b
+  | otherwise = False
+isBlackCheckmate [] y b = elem (GA.getBlackKing b) y 
 
 
 

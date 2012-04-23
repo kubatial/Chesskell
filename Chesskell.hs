@@ -93,7 +93,7 @@ parseInput s
 ----------------------------------------------------------------------
 --Human vs Human Functionality
 humanVsHuman :: (DS.Board, DS.Board2, DS.State) -> IO ()
-humanVsHuman (b, b2, s) = (printBoard 1 b) >> (GA.getAction b b2 s) 
+humanVsHuman (b, b2, s) = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
                       >>= (processAction b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
