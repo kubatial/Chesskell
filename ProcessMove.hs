@@ -8,7 +8,7 @@ processMove :: DS.Board -> DS.Board2 -> DS.State -> DS.Action -> (DS.Board, DS.B
 processMove board board2 state move@(DS.M s d) = (updatedBoard, updatedBoard2, updatedState)
   where
     updatedBoard = wipePiece (HM.insert d (extractPiece (HM.lookup s board)) board) s
-    updatedBoard2 = HM.insert (extractPiece (HM.lookup s board)) d board2
+    updatedBoard2 = HM.delete (extractPiece (HM.lookup d board)) (HM.insert (extractPiece (HM.lookup s board)) d board2)
     updatedState = checkState updatedBoard updatedBoard2 state
 processMove board board2 state move@(KingSideCastle)
     | state1 = (extractFirst whiteRookKingProcess, extractSecond whiteRookKingProcess, DS.NothingBlack)
@@ -96,11 +96,13 @@ checkState board board2 s@(DS.BlackCheck)
   | elem (GA.getWhiteKing board2) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheck
   | otherwise = DS.NothingWhite
 checkState board board2 s@(DS.NothingWhite)
-  | isBlackCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingBlack)) (GA.getLegalWhiteToMoves board board2 s) board2 = DS.BlackCheckmate
+  | (GA.getBlackKing board2) == 0 = DS.BlackCheckmate
+--  | isBlackCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingBlack)) (GA.getLegalWhiteToMoves board board2 s) board2 = DS.BlackCheckmate
   | elem (GA.getBlackKing board2) (GA.getLegalWhiteToMoves board board2 s) = DS.BlackCheck
   | otherwise = DS.NothingBlack
 checkState board board2 s@(DS.NothingBlack)
-  | isWhiteCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingWhite)) (GA.getLegalBlackToMoves board board2 s) board2 = DS.WhiteCheckmate
+  | (GA.getBlackKing board2) == 0 = DS.WhiteCheckmate
+--  | isWhiteCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingWhite)) (GA.getLegalBlackToMoves board board2 s) board2 = DS.WhiteCheckmate
   | elem (GA.getWhiteKing board2) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheck
   | otherwise = DS.NothingWhite
 

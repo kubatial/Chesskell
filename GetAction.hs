@@ -666,7 +666,7 @@ getWhiteKing b2
   | isJust (HM.lookup (Kw True False) b2) = fromJust (HM.lookup (Kw True False) b2)
   | isJust (HM.lookup (Kw False True) b2) = fromJust (HM.lookup (Kw False True) b2)
   | isJust (HM.lookup (Kw False False) b2) = fromJust (HM.lookup (Kw False False) b2)
-  
+  | otherwise = 0  
  
 --Returns the location of the black king
 getBlackKing :: DS.Board2 -> Integer
@@ -675,4 +675,4 @@ getBlackKing b2
   | isJust (HM.lookup (Kb True False) b2) = fromJust (HM.lookup (Kb True False) b2)
   | isJust (HM.lookup (Kb False True) b2) = fromJust (HM.lookup (Kb False True) b2)
   | isJust (HM.lookup (Kb False False) b2) = fromJust (HM.lookup (Kb False False) b2)
-
+  | otherwise = 0
