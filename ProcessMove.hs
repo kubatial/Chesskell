@@ -41,8 +41,8 @@ processMove board board2 state move@(E i j) = (updatedBoard, updatedBoard2, upda
       | (j < i) = wipePiece (wipePiece (HM.insert j (extractPiece (HM.lookup i board)) board) i) (j+8)
       | otherwise =  wipePiece (wipePiece (HM.insert j (extractPiece (HM.lookup i board)) board) i) (j-8)
     updatedBoard2  
-      | (j < i) = HM.insert (extractPiece (HM.lookup (j+8) board)) 100 ( HM.insert (extractPiece (HM.lookup i board)) j board2)
-      | otherwise = HM.insert (extractPiece (HM.lookup (j-8) board)) 100 ( HM.insert (extractPiece (HM.lookup i board)) j board2)
+      | (j < i) = HM.delete (extractPiece (HM.lookup (j+8) board)) ( HM.insert (extractPiece (HM.lookup i board)) j board2)
+      | otherwise = HM.delete (extractPiece (HM.lookup (j-8) board)) ( HM.insert (extractPiece (HM.lookup i board)) j board2)
     updatedState = checkState updatedBoard updatedBoard2 state
 
 extractFirst :: (a, b , c) -> a

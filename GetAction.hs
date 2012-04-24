@@ -649,12 +649,14 @@ getAllBlackQueensLoc b2 i
 getAllWhitePawnsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllWhitePawnsLoc b2 i
   | isJust (HM.lookup (Pw i) b2) = (fromJust (HM.lookup (Pw i) b2)) : (getAllWhitePawnsLoc b2 (i+1))
+  | i < 8 = (getAllWhitePawnsLoc b2 (i+1))
   | otherwise = []
 
 --Returns the location of all the black pawns on the board
 getAllBlackPawnsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllBlackPawnsLoc b2 i
   | isJust (HM.lookup (Pb i) b2) = (fromJust (HM.lookup (Pb i) b2)) : (getAllBlackPawnsLoc b2 (i+1))
+  | i < 8 = (getAllBlackPawnsLoc b2 (i+1))
   | otherwise = []
 
 --Returns the location of the white king
