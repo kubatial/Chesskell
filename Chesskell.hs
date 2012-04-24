@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 --The main file that runs the game
 
 module Chesskell where
@@ -186,7 +187,7 @@ processAction i board board2 state DS.Help
 
 processAction i board board2 state move 
   | i == 1 = humanVsHuman (PM.processMove board board2 state move)  
-  | i == 2 = humanVsMachine1 (minimax (generateGameTree 2 (PM.processMove board board2 state move)))
+  | i == 2 = (humanVsMachine1 (minimax (generateGameTree 2 (PM.processMove board board2 state move))))
   | otherwise = humanVsHuman (PM.processMove board board2 state move)
 --  | i == 3 = humanVsMachine2 (alphabeta (generateGameTree 4 (PM.processMove board, board2, state, move)))
 --  | otherwise = machineVsMachine (minimax (generateGameTree 4 (PM.processMove board, board2, state, move)))
@@ -207,22 +208,23 @@ humanVsMachine1 (b, b2, s)
 evaluatePosition :: Integer -> Integer -> DS.Board -> Integer
 evaluatePosition i j board
   | i > 64 = j
+  | (i > 16) && (i < 49) && ((i `mod` 8) > 1) && ((i `mod` 8) < 0) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup j board))) + 50) board
   | otherwise = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup j board)))) board
 
 pieceValue :: Piece -> Integer
 pieceValue piece
-  | whitePawn = 1
-  | blackPawn = -1
-  | whiteKnight = 3
-  | blackKnight = -3
-  | whiteBishop = 3
-  | blackBishop = -3
-  | whiteRook = 5
-  | blackRook = -5
-  | whiteQueen = 9
-  | blackQueen = -9
-  | whiteKing = 100
-  | blackKing = -100
+  | whitePawn = 100
+  | blackPawn = -100
+  | whiteKnight = 300
+  | blackKnight = -300
+  | whiteBishop = 300
+  | blackBishop = -300
+  | whiteRook = 500
+  | blackRook = -500
+  | whiteQueen = 900
+  | blackQueen = -900
+  | whiteKing = 10000
+  | blackKing = -10000
   | otherwise = 0
     where
       whitePawn = (piece == (Pw 1)) || (piece == (Pw 2)) || (piece == (Pw 3)) || (piece == (Pw 4)) || (piece == (Pw 5)) || (piece == (Pw 6)) || (piece == (Pw 7)) || (piece == (Pw 8))
@@ -241,10 +243,13 @@ pieceValue piece
 generateGameTree :: Integer -> (DS.Board, DS.Board2, DS.State) -> Tree (DS.Board, DS.Board2, DS.State, Integer)
 generateGameTree i (b, b2, s) 
   | i == 0 = Node (b, b2, s, evaluatePosition 1 0 b) []
-  | (even i) = Node (b, b2, s, getMin 1000 children) children
-  | (odd i) = Node (b, b2, s, getMax (-1000) children) children
+  | (even i) = Node (b, b2, s, minimum (P.map (extractValue) (P.map rootLabel children))) children--getMin 1000 children) children
+  | (odd i) = Node (b, b2, s, maximum (P.map (extractValue) (P.map rootLabel children))) children--getMax (-1000) children) children
     where
       children = P.map (generateGameTree (i-1)) (P.map (PM.processMove b b2 s) (GA.getLegalBlackMoves b b2 s))
+
+instance Ord (Tree (DS.Board, DS.Board2, DS.State, Integer)) where
+  (<=) t1 t2 = (extractValue (rootLabel t1)) <= (extractValue (rootLabel t2))
 
 getMin :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
 getMin i (x:xs) 
@@ -275,7 +280,7 @@ extractState :: (DS.Board, DS.Board2, DS.State, Integer) -> DS.State
 extractState (b, b2, s, i) = s
 
 minimax :: Tree (DS.Board, DS.Board2, DS.State, Integer) -> (DS.Board, DS.Board2, DS.State)
-minimax t = PM.processMove (extractBoard1 a) (extractBoard2 a) (extractState a) ((GA.getLegalBlackMoves (extractBoard1 a) (extractBoard2 a) (extractState a)) !! (fromIntegral i))
+minimax t = (PM.processMove (extractBoard1 a) (extractBoard2 a) (extractState a) ((GA.getLegalBlackMoves (extractBoard1 a) (extractBoard2 a) (extractState a)) !! (fromIntegral i)))
   where
     a = rootLabel t
     b = subForest t

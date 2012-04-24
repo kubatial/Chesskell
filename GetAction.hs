@@ -13,11 +13,11 @@ parseUserMove board board2 state move
   | (move == "Exit") || (move == "exit") = return DS.Exit
   | (move == "Resign") || (move == "resign") = return DS.Resign
   | (move == "Help") || (move == "help") = return DS.Help
-  | (move == "O-O") && (isKingSideAllowed board board2 state) = return DS.KingSideCastle 
-  | (move == "O-O-O") && (isQueenSideAllowed board board2 state) = return DS.QueenSideCastle
-  | ((length move ) == 8) && (isAllowedEnPassant board board2 state ep) = return ep  
-  | ((length move ) == 7) && (isAllowedPromotion board board2 state p) = return p
-  | ((length move ) == 5) && (isAllowedMove board board2 state m) = (print (getLegalWhiteMoves board board2 state)) >> return m
+  | (move == "O-O") && (isKingSideAllowed board board2 state) = (print (getLegalWhiteMoves board board2 state)) >> return DS.KingSideCastle 
+  | (move == "O-O-O") && (isQueenSideAllowed board board2 state) = (print (getLegalWhiteMoves board board2 state)) >> return DS.QueenSideCastle
+  | ((length move ) == 8) && (isAllowedEnPassant board board2 state ep) = (print (getLegalWhiteMoves board board2 state)) >> return ep  
+  | ((length move ) == 7) && (isAllowedPromotion board board2 state p) = (print (getLegalWhiteMoves board board2 state)) >> return p
+  | ((length move ) == 5) && (isAllowedMove board board2 state m) = print (getBlackKing board2) >> (print (getLegalWhiteMoves board board2 state)) >> return m
   | otherwise = putStrLn "Please Enter a Legal Move: " >> getLine >>= (parseUserMove board board2 state)
 --  | (length move) /= 5 = putStrLn "Please Enter Your Input as From-To " >> getLine >>= parseUserMove
 --  | otherwise = return (M (convertToInt (take 2 move)) (convertToInt (drop 3 move)))
@@ -76,9 +76,7 @@ isAllowedEnPassant _ _ DS.BlackCheckmate _ = False
 isAllowedEnPassant _ _ DS.Stalemate _ = False
 isAllowedEnPassant _ _ DS.WhiteCheck _ = False
 isAllowedEnPassant _ _ DS.BlackCheck _ = False
-isAllowedEnPassant _ _ DS.NothingWhite _ = False
-isAllowedEnPassant _ _ DS.NothingBlack _ = False
-isAllowedEnPassant board board2 DS.NothingWhiteEnPassant (E i j)
+isAllowedEnPassant board board2 DS.NothingWhite (E i j)
   | i <= j = False --pawns cannot move backwards
   | ((i-j) /= 7) && ((i-j) /= 9) = False --Pawns cannot move that way
   | (((i-j) == 7) && pawns1) || (((i-j) == 9) && pawns2) = True
@@ -100,7 +98,7 @@ isAllowedEnPassant board board2 DS.NothingWhiteEnPassant (E i j)
     		((fromJust (HM.lookup (i-1) board)) == (Pb 6)) || 
     		((fromJust (HM.lookup (i-1) board)) == (Pb 7)) || 
     		((fromJust (HM.lookup (i-1) board)) == (Pb 8)) 
-isAllowedEnPassant board board2 DS.NothingBlackEnPassant (E i j)
+isAllowedEnPassant board board2 DS.NothingBlack (E i j)
   | i >= j = False --pawns cannot move backwards
   | ((j-i) /= 7) && ((j-i) /= 9) = False --Pawns cannot move that way
   | (((j-i) == 7) && pawns2) || (((j-i) == 9) && pawns1) = True
@@ -253,6 +251,8 @@ getLeftRookMoves i board state
   | (i `mod` 8) == 1 = []
   | state1 && (isWhite board (i-1)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i-1)) = []
+  | state1 && (isBlack board (i-1)) = [M i (i-1)]
+  | state2 && (isWhite board (i-1)) = [M i (i-1)]
   | otherwise = (M i (i-1)) : (getLeftRookMoves (i-1) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -263,6 +263,8 @@ getRightRookMoves i board state
   | (i `mod` 8) == 0 = []
   | state1 && (isWhite board (i+1)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i+1)) = []
+  | state1 && (isBlack board (i+1)) = [M i (i+1)]
+  | state2 && (isWhite board (i+1)) = [M i (i+1)]
   | otherwise = (M i (i+1)) : (getRightRookMoves (i+1) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -273,6 +275,8 @@ getTopRookMoves i board state
   | (i >=1) && (i <= 8) = []
   | state1 && (isWhite board (i-8)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i-8)) = []
+  | state1 && (isBlack board (i-8)) = [M i (i-8)]
+  | state2 && (isWhite board (i-8)) = [M i (i-8)]
   | otherwise = (M i (i-8)) : (getTopRookMoves (i-8) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -283,6 +287,8 @@ getBottomRookMoves i board state
   | (i >=57) && (i <= 64) = []
   | state1 && (isWhite board (i+8)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i+8)) = []
+  | state1 && (isBlack board (i+8)) = [M i (i+8)]
+  | state2 && (isWhite board (i+8)) = [M i (i+8)]
   | otherwise = (M i (i+8)) : (getBottomRookMoves (i+8) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -364,6 +370,8 @@ getULeft i board state
   | ((i `mod` 8) == 1) || ((i >= 1) && (i <= 8)) = []
   | state1 && (isWhite board (i-9)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i-9)) = []
+  | state1 && (isBlack board (i-9)) = [M i (i-9)]
+  | state2 && (isWhite board (i-9)) = [M i (i-9)]
   | otherwise = (M i (i-9)) : (getULeft (i-9) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -374,6 +382,8 @@ getURight i board state
   | ((i `mod` 8) == 0) || ((i >= 1) && (i <= 8)) = []
   | state1 && (isWhite board (i-7)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i-7)) = []
+  | state1 && (isBlack board (i-7)) = [M i (i-7)]
+  | state2 && (isWhite board (i-7)) = [M i (i-7)]
   | otherwise = (M i (i-7)) : (getURight (i-7) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -384,6 +394,8 @@ getLLeft i board state
   | ((i `mod` 8) == 1) || ((i >= 57) && (i <= 64)) = []
   | state1 && (isWhite board (i+7)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i+7)) = []
+  | state1 && (isBlack board (i+7)) = [M i (i+7)]
+  | state2 && (isWhite board (i+7)) = [M i (i+7)]
   | otherwise = (M i (i+7)) : (getLLeft (i+7) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -394,6 +406,8 @@ getLRight i board state
   | ((i `mod` 8) == 0) || ((i >= 57) && (i <= 64)) = []
   | state1 && (isWhite board (i+9)) = [] --Own piece is blocking it's path
   | state2 && (isBlack board (i+9)) = []
+  | state1 && (isBlack board (i+9)) = [M i (i+9)]
+  | state2 && (isWhite board (i+9)) = [M i (i+9)]
   | otherwise = (M i (i+9)) : (getLRight (i+9) board state)
     where
       state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
@@ -476,7 +490,7 @@ getForwardMove i board state
   | state1 && (isWhite board i) && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) && (isEmpty board (i-16)) = [M i (i-8), M i (i-16)]
   | state1 && (isWhite board i) && ((i >= 49) && (i <= 56)) && (isEmpty board (i-8)) = [M i (i-8)]
   | state2 && (isBlack board i) && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) && (isEmpty board (i+16)) = [M i (i+8), M i (i+16)]
-  | state2 && (isBlack board i) && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) = [M i (i-8)]
+  | state2 && (isBlack board i) && ((i >= 9) && (i <= 16)) && (isEmpty board (i+8)) = [M i (i+8)]
   | state1 && (isWhite board i) && (isEmpty board (i-8)) && ((i >= 9) && (i <= 16)) = [P i (i-8) (Qw 2), P i (i-8) (Rw 3 True), P i (i-8) (Nw 3), P i (i-8) (Bw 3)]
   | state1 && (isWhite board i) && (isEmpty board (i-8)) = [M i (i-8)]
   | state2 && (isBlack board i) && (isEmpty board (i+8)) && ((i >= 49) && (i <= 56)) = [P i (i+8) (Qb 2), P i (i+8) (Rb 3 True), P i (i+8) (Nb 3), P i (i+8) (Bb 3)]

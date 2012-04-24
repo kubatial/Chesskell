@@ -12,7 +12,7 @@ processMove board board2 state move@(DS.M s d) = (updatedBoard, updatedBoard2, u
     updatedState = checkState updatedBoard updatedBoard2 state
 processMove board board2 state move@(KingSideCastle)
     | state1 = (extractFirst whiteRookKingProcess, extractSecond whiteRookKingProcess, DS.NothingBlack)
-    | state2 = (extractFirst blackRookKingProcess, extractSecond blackRookKingProcess, DS.NothingBlack)
+    | state2 = (extractFirst blackRookKingProcess, extractSecond blackRookKingProcess, DS.NothingWhite)
       where
         state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
         state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
@@ -21,8 +21,8 @@ processMove board board2 state move@(KingSideCastle)
 	whiteRookKingProcess = processMove (extractFirst whiteKingProcess) (extractSecond whiteKingProcess) (extractThird whiteKingProcess) (DS.M 64 62)
 	blackRookKingProcess = processMove (extractFirst blackKingProcess) (extractSecond blackKingProcess) (extractThird blackKingProcess) (DS.M 8 6)
 processMove board board2 state move@(QueenSideCastle)
-    | state1 = (extractFirst whiteRookKingProcess, extractSecond whiteRookKingProcess, DS.NothingWhite)
-    | state2 = (extractFirst blackRookKingProcess, extractSecond blackRookKingProcess, DS.NothingBlack)
+    | state1 = (extractFirst whiteRookKingProcess, extractSecond whiteRookKingProcess, DS.NothingBlack)
+    | state2 = (extractFirst blackRookKingProcess, extractSecond blackRookKingProcess, DS.NothingWhite)
       where
         state1 = (state == DS.NothingWhite) || (state == DS.NothingWhiteEnPassant)
         state2 = (state == DS.NothingBlack) || (state == DS.NothingBlackEnPassant)
@@ -35,7 +35,15 @@ processMove board board2 state move@(P i j piece) = (updatedBoard, updatedBoard2
     updatedBoard = wipePiece (HM.insert j piece board) i
     updatedBoard2 = HM.insert Empty i (HM.insert piece j board2)
     updatedState = checkState updatedBoard updatedBoard2 state
-
+processMove board board2 state move@(E i j) = (updatedBoard, updatedBoard2, updatedState)
+  where
+    updatedBoard
+      | (j < i) = wipePiece (wipePiece (HM.insert j (extractPiece (HM.lookup i board)) board) i) (j+8)
+      | otherwise =  wipePiece (wipePiece (HM.insert j (extractPiece (HM.lookup i board)) board) i) (j-8)
+    updatedBoard2  
+      | (j < i) = HM.insert (extractPiece (HM.lookup (j+8) board)) 100 ( HM.insert (extractPiece (HM.lookup i board)) j board2)
+      | otherwise = HM.insert (extractPiece (HM.lookup (j-8) board)) 100 ( HM.insert (extractPiece (HM.lookup i board)) j board2)
+    updatedState = checkState updatedBoard updatedBoard2 state
 
 extractFirst :: (a, b , c) -> a
 extractFirst (x, y, z) = x
@@ -61,8 +69,8 @@ wipePiece board loc = (HM.insert loc DS.Empty board)
 {- Takes a Maybe Piece and returns the associated Piece -}
 extractPiece :: Maybe Piece -> Piece
 extractPiece (Just p) = p
-extractPiece (Nothing) = DS.Empty
-extractpiece Prelude.Nothing = DS.Empty
+--extractPiece (Nothing) = DS.Empty
+--extractpiece Prelude.Nothing = DS.Empty
 
 {-
 {- Takes a Board, a desired Piece, and returns its location in the board as a key value into the Board -}
