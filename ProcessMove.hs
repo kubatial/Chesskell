@@ -97,11 +97,13 @@ checkState board board2 s@(DS.BlackCheck)
   | otherwise = DS.NothingWhite
 checkState board board2 s@(DS.NothingWhite)
   | (GA.getBlackKing board2) == 0 = DS.BlackCheckmate
+  | (GA.getLegalBlackMoves board board2 DS.NothingBlack) == [] = DS.Stalemate
 --  | isBlackCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingBlack)) (GA.getLegalWhiteToMoves board board2 s) board2 = DS.BlackCheckmate
   | elem (GA.getBlackKing board2) (GA.getLegalWhiteToMoves board board2 s) = DS.BlackCheck
   | otherwise = DS.NothingBlack
 checkState board board2 s@(DS.NothingBlack)
-  | (GA.getBlackKing board2) == 0 = DS.WhiteCheckmate
+  | (GA.getWhiteKing board2) == 0 = DS.WhiteCheckmate
+  | (GA.getLegalWhiteMoves board board2 DS.NothingWhite) == [] = DS.Stalemate
 --  | isWhiteCheckmate (L.map GA.extractTo (GA.generateKingMoves board board2 DS.NothingWhite)) (GA.getLegalBlackToMoves board board2 s) board2 = DS.WhiteCheckmate
   | elem (GA.getWhiteKing board2) (GA.getLegalBlackToMoves board board2 s) = DS.WhiteCheck
   | otherwise = DS.NothingWhite

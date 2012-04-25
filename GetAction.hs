@@ -318,6 +318,10 @@ generateKnightMoves board board2 state
 singleKnightMoves :: DS.Board -> DS.Board2 -> DS.State -> Integer -> [DS.Action]
 singleKnightMoves board board2 state i 
   | ((i `mod` 8) >= 3) && ((i `mod` 8) <= 6) = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i-10, i+10, i+6, i+17, i+15])
+  | (i `mod` 8) == 2 = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i+10, i+17, i+15])
+  | (i `mod` 8) == 1 = L.map (toMove i) (deleteSameColor board state [i-15, i-6, i+10, i+17])
+  | (i `mod` 8) == 7 = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-10, i+6, i+17, i+15])
+  | (i `mod` 8) == 0 = L.map (toMove i) (deleteSameColor board state [i-17, i-10, i+6, i+15])
   | (i `mod` 8) < 3 = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i+10, i+6, i+17, i+15])
   | otherwise = L.map (toMove i) (deleteSameColor board state [i-15, i-17, i-6, i-10, i+6, i+17, i+15])
 
@@ -502,6 +506,10 @@ getForwardMove i board state
 
 getDiagonalMove :: Integer -> DS.Board -> DS.State -> [DS.Action]
 getDiagonalMove i board state 
+  | state1 && ((i `mod` 8) == 1) = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i-7]))
+  | state1 && ((i `mod` 8) == 0) = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i-9]))
+  | state2 && ((i `mod` 8) == 1) = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i+9]))
+  | state2 && ((i `mod` 8) == 0) = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i+7]))
   | state1 = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i-9, i-7]))
   | state2 = L.map (toMove i) (deleteEmpty board (deleteSameColor board state [i+9, i+7]))
     where

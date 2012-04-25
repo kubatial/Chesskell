@@ -99,7 +99,7 @@ humanVsHuman (b, b2, s)
   | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+  | otherwise = (print s) >> (printBoard 1 b) >> (print b2) >> (GA.getAction b b2 s) 
                       >>= (processAction 1 b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
@@ -200,7 +200,7 @@ humanVsMachine1 (b, b2, s)
   | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+  | otherwise = (print s) >> (printBoard 1 b) >> (print b2) >> (GA.getAction b b2 s) 
                       >>= (processAction 2 b b2 s)-- >>= generateGameTree >>= minimax
 
 
