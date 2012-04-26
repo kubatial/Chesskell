@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
 --The main file that runs the game
 
 module Chesskell where
@@ -243,13 +242,13 @@ pieceValue piece
 generateGameTree :: Integer -> (DS.Board, DS.Board2, DS.State) -> Tree (DS.Board, DS.Board2, DS.State, Integer)
 generateGameTree i (b, b2, s) 
   | i == 0 = Node (b, b2, s, evaluatePosition 1 0 b) []
-  | (even i) = Node (b, b2, s, minimum (P.map (extractValue) (P.map rootLabel children))) children--getMin 1000 children) children
-  | (odd i) = Node (b, b2, s, maximum (P.map (extractValue) (P.map rootLabel children))) children--getMax (-1000) children) children
+  | (even i) = Node (b, b2, s, {- minimum (P.map (extractValue) (P.map rootLabel children))) children--} getMin 1000 children) children
+  | (odd i) = Node (b, b2, s, {- maximum (P.map (extractValue) (P.map rootLabel children))) children--} getMax (-1000) children) children
     where
       children = P.map (generateGameTree (i-1)) (P.map (PM.processMove b b2 s) (GA.getLegalBlackMoves b b2 s))
 
-instance Ord (Tree (DS.Board, DS.Board2, DS.State, Integer)) where
-  (<=) t1 t2 = (extractValue (rootLabel t1)) <= (extractValue (rootLabel t2))
+--instance Ord (Tree (DS.Board, DS.Board2, DS.State, Integer)) where
+--  (<=) t1 t2 = (extractValue (rootLabel t1)) <= (extractValue (rootLabel t2))
 
 getMin :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
 getMin i (x:xs) 

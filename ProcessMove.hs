@@ -69,7 +69,7 @@ wipePiece board loc = (HM.insert loc DS.Empty board)
 {- Takes a Maybe Piece and returns the associated Piece -}
 extractPiece :: Maybe Piece -> Piece
 extractPiece (Just p) = p
---extractPiece (Nothing) = DS.Empty
+extractPiece (Nothing) = DS.Empty
 --extractpiece Prelude.Nothing = DS.Empty
 
 {-

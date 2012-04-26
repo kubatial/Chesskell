@@ -608,6 +608,7 @@ getAllWhiteRooksLoc :: DS.Board2 -> Integer -> [Integer]
 getAllWhiteRooksLoc b2 i
   | isJust (HM.lookup (Rw i False) b2) = (fromJust (HM.lookup (Rw i False) b2)) : (getAllWhiteRooksLoc b2 (i+1))
   | isJust (HM.lookup (Rw i True) b2) = (fromJust (HM.lookup (Rw i True) b2)) : (getAllWhiteRooksLoc b2 (i+1))
+  | (i <= 3) = getAllWhiteRooksLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the black rooks on the board
@@ -615,42 +616,49 @@ getAllBlackRooksLoc :: DS.Board2 -> Integer -> [Integer]
 getAllBlackRooksLoc b2 i
   | isJust (HM.lookup (Rb i False) b2) = (fromJust (HM.lookup (Rb i False) b2)) : (getAllBlackRooksLoc b2 (i+1))
   | isJust (HM.lookup (Rb i True) b2) = (fromJust (HM.lookup (Rb i True) b2)) : (getAllBlackRooksLoc b2 (i+1))
+  | (i <= 3) = getAllBlackRooksLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the white knights on the board
 getAllWhiteKnightsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllWhiteKnightsLoc b2 i
   | isJust (HM.lookup (Nw i) b2) = (fromJust (HM.lookup (Nw i) b2)) : (getAllWhiteKnightsLoc b2 (i+1))
+  | (i <= 3) = getAllWhiteKnightsLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the black knights on the board
 getAllBlackKnightsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllBlackKnightsLoc b2 i
   | isJust (HM.lookup (Nb i) b2) = (fromJust (HM.lookup (Nb i) b2)) : (getAllBlackKnightsLoc b2 (i+1))
+  | (i <= 3) = getAllBlackKnightsLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the white bishops on the board
 getAllWhiteBishopsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllWhiteBishopsLoc b2 i
   | isJust (HM.lookup (Bw i) b2) = (fromJust (HM.lookup (Bw i) b2)) : (getAllWhiteBishopsLoc b2 (i+1))
+  | (i <= 3) = getAllWhiteBishopsLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the black bishoops on the board
 getAllBlackBishopsLoc :: DS.Board2 -> Integer -> [Integer]
 getAllBlackBishopsLoc b2 i
   | isJust (HM.lookup (Bb i) b2) = (fromJust (HM.lookup (Bb i) b2)) : (getAllBlackBishopsLoc b2 (i+1))
+  | (i <= 3) = getAllBlackBishopsLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the white queens on the board
 getAllWhiteQueensLoc :: DS.Board2 -> Integer -> [Integer]
 getAllWhiteQueensLoc b2 i
   | isJust (HM.lookup (Qw i) b2) = (fromJust (HM.lookup (Qw i) b2)) : (getAllWhiteQueensLoc b2 (i+1))
+  | (i <= 3) = getAllWhiteQueensLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the black queens on the board
 getAllBlackQueensLoc :: DS.Board2 -> Integer -> [Integer]
 getAllBlackQueensLoc b2 i
   | isJust (HM.lookup (Qb i) b2) = (fromJust (HM.lookup (Qb i) b2)) : (getAllBlackQueensLoc b2 (i+1))
+  | (i <= 3) = getAllBlackQueensLoc b2 (i+1)
   | otherwise = []
 
 --Returns the location of all the white pawns on the board
