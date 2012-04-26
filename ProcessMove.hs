@@ -54,14 +54,7 @@ extractSecond (x, y, z) = y
 extractThird :: (a, b , c) -> c
 extractThird (x, y, z) = z
 
-{-
-processMove board move@(DS.M s d) =
-  (wipePiece (HM.insert d (extractPiece (HM.lookup s board)) board) s, 
-            checkState board move)
-  -}     
-{- Takes a board and target position (Integer) and returns a new
- - board with the target position wiped Empty 
- -}
+
 wipePiece :: DS.Board -> Integer -> DS.Board
 wipePiece board loc = (HM.insert loc DS.Empty board)
 
@@ -72,22 +65,7 @@ extractPiece (Just p) = p
 extractPiece (Nothing) = DS.Empty
 --extractpiece Prelude.Nothing = DS.Empty
 
-{-
-{- Takes a Board, a desired Piece, and returns its location in the board as a key value into the Board -}
-getBoardLocation :: DS.Board -> DS.Piece -> Integer 
-getBoardLocation b p = recurseOnBoard b p 1 
 
-recurseOnBoard :: DS.Board -> DS.Piece -> Integer -> Integer
-recurseOnBoard b p x 
-	| _ _ 65 				= -1
-	| extractPiece . lookup x b == p	= x 
-	| otherwise 				= recurseOnBoard b p (x+1) 
-
-
-{- Takes a board and the latest move and returns the new game
- - state (e.g. BlackCheckMate, WhiteCheck, Nothing, etc.) 
- -}
- -}
 checkState :: DS.Board -> DS.Board2 -> DS.State -> DS.State
 checkState board board2 s@(DS.WhiteCheck)
   | elem (GA.getBlackKing board2) (GA.getLegalWhiteToMoves board board2 s) = DS.BlackCheck

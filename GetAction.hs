@@ -13,14 +13,12 @@ parseUserMove board board2 state move
   | (move == "Exit") || (move == "exit") = return DS.Exit
   | (move == "Resign") || (move == "resign") = return DS.Resign
   | (move == "Help") || (move == "help") = return DS.Help
-  | (move == "O-O") && (isKingSideAllowed board board2 state) = (print (getLegalWhiteMoves board board2 state)) >> return DS.KingSideCastle 
-  | (move == "O-O-O") && (isQueenSideAllowed board board2 state) = (print (getLegalWhiteMoves board board2 state)) >> return DS.QueenSideCastle
-  | ((length move ) == 8) && (isAllowedEnPassant board board2 state ep) = (print (getLegalWhiteMoves board board2 state)) >> return ep  
-  | ((length move ) == 7) && (isAllowedPromotion board board2 state p) = (print (getLegalWhiteMoves board board2 state)) >> return p
-  | ((length move ) == 5) && (isAllowedMove board board2 state m) = print (getBlackKing board2) >> (print (getLegalWhiteMoves board board2 state)) >> return m
+  | (move == "O-O") && (isKingSideAllowed board board2 state) = return DS.KingSideCastle 
+  | (move == "O-O-O") && (isQueenSideAllowed board board2 state) =  return DS.QueenSideCastle
+  | ((length move ) == 8) && (isAllowedEnPassant board board2 state ep) = return ep  
+  | ((length move ) == 7) && (isAllowedPromotion board board2 state p) = return p
+  | ((length move ) == 5) && (isAllowedMove board board2 state m) = return m
   | otherwise = putStrLn "Please Enter a Legal Move: " >> getLine >>= (parseUserMove board board2 state)
---  | (length move) /= 5 = putStrLn "Please Enter Your Input as From-To " >> getLine >>= parseUserMove
---  | otherwise = return (M (convertToInt (take 2 move)) (convertToInt (drop 3 move)))
     where
       ep = E (convertToInt (take 2 move)) (convertToInt (take 2 (drop 3 move)))
       p = P (convertToInt (take 2 move)) (convertToInt (take 2 (drop 3 move))) (convertToPiece (drop 6 move) state)

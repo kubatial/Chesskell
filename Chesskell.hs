@@ -47,8 +47,6 @@ printRules = putStr (unlines ["\n\nWELCOME TO CHESSKELL!" ,
 	"You can choose between the following options" ,
 	"1) Human vs. Human - Where 2 human players enter moves" ,
 	"2) Human vs. Machine1 - Human plays against minimax machine" ,
-	"3) Human vs. Machine2 - Human plays against alphabeta machine",
-	"4) Machine1 vs. Machine2 - Pit machines against each other\n" ,
 	"When you enter a move you should type in the square you are" ,
 	"moving a piece from to the square you are moving to, E.g e2-e4",
 	"There are 3 kinds of special moves: Castling, Promotion and En Passant.",
@@ -84,8 +82,6 @@ parseInput s
   | (s == "Exit") || (s == "exit")  = processAction 1 initBoard initBoard2 DS.NothingWhite DS.Exit
   | s == "1" = humanVsHuman (initBoard, initBoard2, DS.NothingWhite)
   | s == "2" = humanVsMachine1 (initBoard, initBoard2, DS.NothingWhite)
-  | s == "3" = humanVsMachine2 (initBoard, initBoard2, DS.NothingWhite)
-  | s == "4" = machineVsMachine (initBoard, initBoard2, DS.NothingWhite)
   | (s == "Help") || (s == "help")  = printRules >> getLine >>= parseInput
   | (s == "Resign") || (s == "resign") = processAction 1 initBoard initBoard2 DS.NothingWhite DS.Resign
   | otherwise = (putStrLn "Please enter a valid input: ") >> getLine 
@@ -98,7 +94,7 @@ humanVsHuman (b, b2, s)
   | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
+  | otherwise =  (printBoard 1 b) >> (GA.getAction b b2 s) 
                       >>= (processAction 1 b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
@@ -181,18 +177,17 @@ processAction _ _ _ DS.Stalemate _ =
 processAction i board board2 state DS.Help
   | i == 1 = printRules >> (humanVsHuman (board, board2, state) )
   | i == 2 = printRules >> (humanVsMachine1 (board, board2, state))
-  | i == 3 = printRules >> (humanVsMachine2 (board, board2, state))
-  | otherwise = printRules >> (machineVsMachine (board, board2, state))
 
 processAction i board board2 state move 
-  | i == 1 = (print (evaluatePosition 1 0 board)) >> humanVsHuman (PM.processMove board board2 state move)  
-  | i == 2 = (print (extractValue (rootLabel tree))) >> (humanVsMachine1 (minimax tree))
+  | i == 1 = humanVsHuman (PM.processMove board board2 state move)  
+  | (i==2) && (state == BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
+  | (i==2) && (state == WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
+  | (i==2) && (state == Stalemate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | i == 2 = humanVsMachine1 (minimax tree)
   | otherwise = humanVsHuman (PM.processMove board board2 state move)
     where
-      tree = generateGameTree 2 (PM.processMove board board2 state move)
---  | i == 3 = humanVsMachine2 (alphabeta (generateGameTree 4 (PM.processMove board, board2, state, move)))
---  | otherwise = machineVsMachine (minimax (generateGameTree 4 (PM.processMove board, board2, state, move)))
-
+      m = PM.processMove board board2 state move
+      tree = generateGameTree 2 m
 
 -----------------------------------------------------------------------------
 --Human vs. Machine1 Functionality
@@ -200,8 +195,8 @@ humanVsMachine1 :: (DS.Board, DS.Board2, DS.State) -> IO ()
 humanVsMachine1 (b, b2, s) 
   | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
-  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (print b2) >> (GA.getAction b b2 s) 
+  | s == (DS.Stalemate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
+  | otherwise = (printBoard 1 b)  >> (GA.getAction b b2 s) 
                       >>= (processAction 2 b b2 s)-- >>= generateGameTree >>= minimax
 
 
@@ -247,29 +242,10 @@ pieceValue piece
 generateGameTree :: Integer -> (DS.Board, DS.Board2, DS.State) -> Tree (DS.Board, DS.Board2, DS.State, Integer)
 generateGameTree i (b, b2, s) 
   | i == 0 = Node (b, b2, s, evaluatePosition 1 0 b) []
-  | (even i) = Node (b, b2, s, minimum (P.map (extractValue) (P.map rootLabel children))) children -- {-getMax (-100000000) children -}) children
-  | (odd i) = Node (b, b2, s, maximum (P.map (extractValue) (P.map rootLabel children))) children -- {- getMin 100000000 children -}) children
+  | (even i) = Node (b, b2, s, minimum (P.map (extractValue) (P.map rootLabel children))) children 
+  | (odd i) = Node (b, b2, s, maximum (P.map (extractValue) (P.map rootLabel children))) children 
     where
       children = P.map (generateGameTree (i-1)) (P.map (PM.processMove b b2 s) (GA.getLegalBlackMoves b b2 s))
-
---instance Ord (Tree (DS.Board, DS.Board2, DS.State, Integer)) where
---  (<=) t1 t2 = (extractValue (rootLabel t1)) <= (extractValue (rootLabel t2))
-
-getMin :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
-getMin i (x:xs) 
-  | i < y = getMin i xs
-  | otherwise = getMin y xs
-    where
-      y = (extractValue (rootLabel x))
-getMin i [] = i
-
-getMax :: Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
-getMax i (x:xs) 
-  | i < y = getMin y xs
-  | otherwise = getMin i xs
-    where
-      y = (extractValue (rootLabel x))
-getMax i [] = i
 
 extractValue :: (DS.Board, DS.Board2, DS.State, Integer) -> Integer
 extractValue (b, b2, s, i) = i
@@ -284,38 +260,18 @@ extractState :: (DS.Board, DS.Board2, DS.State, Integer) -> DS.State
 extractState (b, b2, s, i) = s
 
 minimax :: Tree (DS.Board, DS.Board2, DS.State, Integer) -> (DS.Board, DS.Board2, DS.State)
-minimax t = (PM.processMove (extractBoard1 a) (extractBoard2 a) (extractState a) ((GA.getLegalBlackMoves (extractBoard1 a) (extractBoard2 a) (extractState a)) !! (fromIntegral i)))
-  where
-    a = rootLabel t
-    b = subForest t
-    i = getMatchingChild 0 (extractValue a) b
+minimax t 
+  | ((length moves) > 0) = (PM.processMove (extractBoard1 a) (extractBoard2 a) (extractState a) (moves !! (fromIntegral i)))
+  | otherwise = ((extractBoard1 a), (extractBoard2 a), (extractState a))
+    where
+      moves = GA.getLegalBlackMoves (extractBoard1 a) (extractBoard2 a) (extractState a)
+      a = rootLabel t
+      b = subForest t
+      i = getMatchingChild 0 (extractValue a) b
 
 getMatchingChild :: Integer -> Integer -> [Tree (DS.Board, DS.Board2, DS.State, Integer)] -> Integer
 getMatchingChild i j (x:xs)
   | j == (extractValue (rootLabel x)) = i
   | otherwise = getMatchingChild (i+1) j xs
 getMatchingChild i j [] = 0
-
------------------------------------------------------------------------------
---Human vs. Machine2 Functionality
-humanVsMachine2 :: (DS.Board, DS.Board2, DS.State) -> IO ()
-humanVsMachine2 (b, b2, s) 
-  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
-  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
-  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
-                      >>= (processAction 1 b b2 s)
-
-
------------------------------------------------------------------------------
---Machine vs. Machine Functionality
-machineVsMachine :: (DS.Board, DS.Board2, DS.State) -> IO ()
-machineVsMachine (b, b2, s) 
-  | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
-  | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
-  | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
-                      >>= (processAction 1 b b2 s)
-
-
 
