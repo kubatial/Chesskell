@@ -4,5 +4,5 @@ By: Alen Kubati, Jiten Suthar, Sanjay Paul
 
 ##################################################
 
-To run, just type in: runhaskell Chesskell
+To run, just type in: runhaskell Chesskell.hs
 and follow the instructions.
