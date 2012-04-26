@@ -98,7 +98,7 @@ humanVsHuman (b, b2, s)
   | s == (DS.BlackCheckmate) = putStrLn "\nWhite wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.WhiteCheckmate) = putStrLn "\nBlack wins. \n Thank you for playing Chesskell!\n"
   | s == (DS.BlackCheckmate) = putStrLn "\nThe game ended in a stalemate. \n Thank you for playing Chesskell!\n"
-  | otherwise = (print s) >> (printBoard 1 b) >> (print b2) >> (GA.getAction b b2 s) 
+  | otherwise = (print s) >> (printBoard 1 b) >> (GA.getAction b b2 s) 
                       >>= (processAction 1 b b2 s)
 
 printBoard :: Integer -> Board -> IO ()
@@ -185,9 +185,11 @@ processAction i board board2 state DS.Help
   | otherwise = printRules >> (machineVsMachine (board, board2, state))
 
 processAction i board board2 state move 
-  | i == 1 = humanVsHuman (PM.processMove board board2 state move)  
-  | i == 2 = (humanVsMachine1 (minimax (generateGameTree 2 (PM.processMove board board2 state move))))
+  | i == 1 = (print (evaluatePosition 1 0 board)) >> humanVsHuman (PM.processMove board board2 state move)  
+  | i == 2 = (print (extractValue (rootLabel tree))) >> (humanVsMachine1 (minimax tree))
   | otherwise = humanVsHuman (PM.processMove board board2 state move)
+    where
+      tree = generateGameTree 2 (PM.processMove board board2 state move)
 --  | i == 3 = humanVsMachine2 (alphabeta (generateGameTree 4 (PM.processMove board, board2, state, move)))
 --  | otherwise = machineVsMachine (minimax (generateGameTree 4 (PM.processMove board, board2, state, move)))
 
@@ -207,8 +209,11 @@ humanVsMachine1 (b, b2, s)
 evaluatePosition :: Integer -> Integer -> DS.Board -> Integer
 evaluatePosition i j board
   | i > 64 = j
-  | (i > 16) && (i < 49) && ((i `mod` 8) > 1) && ((i `mod` 8) < 0) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup j board))) + 50) board
-  | otherwise = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup j board)))) board
+  | (((i>=27) && (i<=29)) || ((i>=35) && (i<=37))) && (isBlack board i) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup i board))) - 75) board
+  | (((i>=27) && (i<=29)) || ((i>=35) && (i<=37))) && (isWhite board i) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup i board))) + 75) board
+  | (i > 16) && (i < 49) && ((i `mod` 8) > 1) && ((i `mod` 8) < 0) && (GA.isBlack board i) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup i board))) - 50) board
+  | (i > 16) && (i < 49) && ((i `mod` 8) > 1) && ((i `mod` 8) < 0) && (GA.isWhite board i) = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup i board))) + 50) board
+  | otherwise = evaluatePosition (i+1) (j + (pieceValue (PM.extractPiece (HM.lookup i board)))) board
 
 pieceValue :: Piece -> Integer
 pieceValue piece
@@ -242,8 +247,8 @@ pieceValue piece
 generateGameTree :: Integer -> (DS.Board, DS.Board2, DS.State) -> Tree (DS.Board, DS.Board2, DS.State, Integer)
 generateGameTree i (b, b2, s) 
   | i == 0 = Node (b, b2, s, evaluatePosition 1 0 b) []
-  | (even i) = Node (b, b2, s, {- minimum (P.map (extractValue) (P.map rootLabel children))) children--} getMin 1000 children) children
-  | (odd i) = Node (b, b2, s, {- maximum (P.map (extractValue) (P.map rootLabel children))) children--} getMax (-1000) children) children
+  | (even i) = Node (b, b2, s, minimum (P.map (extractValue) (P.map rootLabel children))) children -- {-getMax (-100000000) children -}) children
+  | (odd i) = Node (b, b2, s, maximum (P.map (extractValue) (P.map rootLabel children))) children -- {- getMin 100000000 children -}) children
     where
       children = P.map (generateGameTree (i-1)) (P.map (PM.processMove b b2 s) (GA.getLegalBlackMoves b b2 s))
 
